@@ -29,12 +29,27 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         if response.status_code == 200:
             user = User.objects.get(username=request.data['username'])
             
-            # Verify institute if provided
-            if institute_name and user.institute and user.institute.name.lower() != institute_name.lower():
-                return Response(
-                    {'detail': f'User does not belong to {institute_name}'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+            # Verify institute if provided (with mapping support for full names vs abbreviations)
+            if institute_name and user.institute:
+                # Map full display names from the frontend to database codes
+                mapping = {
+                    'cmr college of engineering & technology': 'cmrcet',
+                    'cmr engineering college': 'cmrec',
+                    'cmr technical campus': 'cmrtc',
+                    'cmr institute of technology': 'cmrit'
+                }
+                user_inst_name = user.institute.name.lower()
+                req_inst_name = institute_name.lower()
+                
+                # Resolve mapped codes
+                mapped_user = mapping.get(user_inst_name, user_inst_name)
+                mapped_req = mapping.get(req_inst_name, req_inst_name)
+                
+                if mapped_user != mapped_req:
+                    return Response(
+                        {'detail': f'User does not belong to {institute_name}'}, 
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
 
             response.data['user'] = {
                 'id': user.id,

@@ -1,0 +1,62 @@
+{
+    "programs": [
+        {
+            "id": 1,
+            "name": "B.Tech CSE",
+            "courses": [
+                {
+                    "id": 101,
+                    "name": "Programming Fundamentals",
+                    "subjects": [
+                        {
+                            "id": 1001,
+                            "name": "Python Programming",
+                            "modules": [
+                                {
+                                    "id": 5001,
+                                    "name": "Basics of Python",
+                                    "topics": [
+                                        "Variables",
+                                        "Data Types",
+                                        "Operators"
+                                    ]
+                                },
+                                {
+                                    "id": 5002,
+                                    "name": "Control Statements",
+                                    "topics": [
+                                        "If Else",
+                                        "Loops",
+                                        "Break and Continue"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 102,
+                    "name": "Data Structures",
+                    "subjects": [
+                        {
+                            "id": 1002,
+                            "name": "DSA with Python",
+                            "modules": [
+                                {
+                                    "id": 5003,
+                                    "name": "Linear Data Structures",
+                                    "topics": [
+                                        "Arrays",
+                                        "Linked Lists",
+                                        "Stacks",
+                                        "Queues"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

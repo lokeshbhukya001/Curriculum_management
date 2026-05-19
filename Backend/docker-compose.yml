@@ -1,0 +1,20 @@
+# Backend Docker Compose
+# Components: Django (Backend Service), SQLite (Database)
+# Versions:
+#   - Docker Compose: 3.8
+#   - Python: 3.12-slim
+#   - Django: 6.0.5
+
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: syn_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=True
+    # SQLite database is stored locally and mounted via volumes

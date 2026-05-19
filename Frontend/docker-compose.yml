@@ -1,0 +1,20 @@
+# Frontend Docker Compose
+# Components: React (Frontend Service)
+# Versions:
+#   - Docker Compose: 3.8
+#   - Node: 20-slim
+#   - React: 18.2.0
+
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    container_name: syn_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api

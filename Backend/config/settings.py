@@ -111,6 +111,36 @@ DATABASES = {
     }
 }
 
+# Configure database dynamically based on DATABASE_URL (MySQL / PostgreSQL / SQLite)
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    from urllib.parse import urlparse
+    try:
+        url = urlparse(DATABASE_URL)
+        if url.scheme == 'mysql':
+            DATABASES['default'] = {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': url.path[1:],
+                'USER': url.username,
+                'PASSWORD': url.password,
+                'HOST': url.hostname,
+                'PORT': url.port or 3306,
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                }
+            }
+        elif url.scheme in ('postgres', 'postgresql'):
+            DATABASES['default'] = {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': url.path[1:],
+                'USER': url.username,
+                'PASSWORD': url.password,
+                'HOST': url.hostname,
+                'PORT': url.port or 5432,
+            }
+    except Exception as e:
+        print(f"Error parsing DATABASE_URL: {e}")
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

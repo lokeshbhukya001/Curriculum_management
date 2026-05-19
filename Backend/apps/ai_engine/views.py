@@ -13,7 +13,7 @@ def call_ai_engine(prompt):
     
     if gemini_api_key:
         # Use Google Gemini API (high reliability, low memory usage in production)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key={gemini_api_key}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{

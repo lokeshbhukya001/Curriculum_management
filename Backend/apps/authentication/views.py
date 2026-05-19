@@ -18,12 +18,33 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+from django.contrib.auth import authenticate
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        # We can add institute check here if needed
-        # The frontend will send username, password
-        # If we want to check institute_name at login:
+        username = request.data.get('username')
+        password = request.data.get('password')
         institute_name = request.data.get('institute_name')
+        
+        print("\n" + "="*60)
+        print("DIAGNOSTIC LOGIN LOGGER:")
+        print(f"  • Username: {username}")
+        print(f"  • Password Length: {len(password) if password else 0}")
+        print(f"  • Institute Name: {institute_name}")
+        
+        # Test manual authenticate
+        user = authenticate(username=username, password=password)
+        if user:
+            print(f"  • Manual Authenticate: SUCCESS (User role: {user.role}, Active: {user.is_active})")
+        else:
+            print("  • Manual Authenticate: FAILED")
+            try:
+                db_user = User.objects.get(username=username)
+                print(f"  • User exists in DB: YES (Role: {db_user.role}, Is Active: {db_user.is_active})")
+                print(f"  • DB Hashed Password: {db_user.password}")
+            except User.DoesNotExist:
+                print("  • User exists in DB: NO")
+        print("="*60 + "\n")
         
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:

@@ -12,31 +12,6 @@ OLLAMA_API_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "gemma:2b"
 
 def call_ai_engine(prompt):
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    
-    # 1. On Render/Production: Use Gemini 1.5 Flash (stable v1 API) to save memory and avoid connection errors
-    if gemini_api_key:
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
-        headers = {"Content-Type": "application/json"}
-        payload = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }]
-        }
-        try:
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
-            if response.status_code == 200:
-                data = response.json()
-                try:
-                    return data['candidates'][0]['content']['parts'][0]['text']
-                except (KeyError, IndexError):
-                    raise Exception(f"Unexpected response format from Gemini API: {data}")
-            else:
-                raise Exception(f"Gemini API Error {response.status_code}: {response.text}")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Gemini API Connection Error: {str(e)}")
-
-    # 2. Locally on your PC: Strictly use local Ollama (gemma:2b)
     payload = {
         "model": MODEL_NAME,
         "prompt": prompt,

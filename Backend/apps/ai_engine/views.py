@@ -7,30 +7,54 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-# Ollama Configuration
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma:2b"
-
+# AI Engine Configuration
 def call_ai_engine(prompt):
-    payload = {
-        "model": MODEL_NAME,
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "num_predict": 800,
-            "temperature": 0.5
-        }
-    }
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
     
-    try:
-        response = requests.post(OLLAMA_API_URL, json=payload, timeout=180) # Local LLMs can be slow
-        if response.status_code == 200:
-            data = response.json()
-            return data.get('response', '')
-        else:
-            raise Exception(f"Ollama API Error {response.status_code}: {response.text}")
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Ollama Connection Error: {str(e)}. Make sure Ollama is running.")
+    if gemini_api_key:
+        # Use Google Gemini API (high reliability, low memory usage in production)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                try:
+                    return data['candidates'][0]['content']['parts'][0]['text']
+                except (KeyError, IndexError):
+                    raise Exception(f"Unexpected response format from Gemini API: {data}")
+            else:
+                raise Exception(f"Gemini API Error {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Gemini API Connection Error: {str(e)}")
+            
+    else:
+        # Fall back to local Ollama Configuration for offline local development
+        OLLAMA_API_URL = "http://localhost:11434/api/generate"
+        MODEL_NAME = "gemma:2b"
+        payload = {
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "num_predict": 800,
+                "temperature": 0.5
+            }
+        }
+        try:
+            response = requests.post(OLLAMA_API_URL, json=payload, timeout=180) # Local LLMs can be slow
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('response', '')
+            else:
+                raise Exception(f"Ollama API Error {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Ollama Connection Error: {str(e)}. Make sure Ollama is running.")
 
 def extract_json_list(text):
     try:

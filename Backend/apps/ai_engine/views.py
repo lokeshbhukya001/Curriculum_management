@@ -14,9 +14,9 @@ MODEL_NAME = "gemma:2b"
 def call_ai_engine(prompt):
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     
-    # 1. On Render/Production: Use Gemini 3 Flash to save memory and avoid connection errors
+    # 1. On Render/Production: Use Gemini 1.5 Flash (stable v1 API) to save memory and avoid connection errors
     if gemini_api_key:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key={gemini_api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
         headers = {"Content-Type": "application/json"}
         payload = {
             "contents": [{

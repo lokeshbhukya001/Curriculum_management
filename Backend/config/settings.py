@@ -30,7 +30,13 @@ SECRET_KEY = 'django-insecure-@x+!b54g@t8j=7w-m_pv5djj7j-91q*aa-m(*o&i4ds!lof75^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'curriculum-management-bna5.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+    '.railway.app',
+]
 
 
 # Application definition

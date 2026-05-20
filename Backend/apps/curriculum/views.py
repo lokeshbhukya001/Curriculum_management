@@ -11,7 +11,7 @@ from student_data.permissions import IsAdmin, IsTeacher, IsStudent, IsAdminOrRea
 
 
 class ProgramViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
-    queryset = Program.objects.all()
+    queryset = Program.objects.select_related('institute', 'created_by')
     serializer_class = ProgramSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -19,7 +19,7 @@ class ProgramViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
         serializer.save(created_by=self.request.user, institute=self.request.user.institute)
 
 class CourseViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
-    queryset = Course.objects.all()
+    queryset = Course.objects.select_related('program', 'institute', 'teacher')
     serializer_class = CourseSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -30,7 +30,7 @@ class CourseViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
 
 
 class ModuleViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
-    queryset = Module.objects.all()
+    queryset = Module.objects.select_related('course', 'institute')
     serializer_class = ModuleSerializer
     permission_classes = [IsAdminOrTeacherOrReadOnly]
 
@@ -48,7 +48,7 @@ class ModuleViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
 
 
 class TopicViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
-    queryset = Topic.objects.all()
+    queryset = Topic.objects.select_related('module', 'institute', 'prerequisite_topic').prefetch_related('objectives', 'materials')
     serializer_class = TopicSerializer
     permission_classes = [IsAdminOrTeacherOrReadOnly]
 
@@ -66,7 +66,7 @@ class TopicViewSet(MultiTenantViewSetMixin, viewsets.ModelViewSet):
 
 
 class LearningObjectiveViewSet(viewsets.ModelViewSet):
-    queryset = LearningObjective.objects.all()
+    queryset = LearningObjective.objects.select_related('topic')
     serializer_class = LearningObjectiveSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -75,7 +75,7 @@ class LearningObjectiveViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(topic__institute=self.request.user.institute)
 
 class MaterialViewSet(viewsets.ModelViewSet):
-    queryset = Material.objects.all()
+    queryset = Material.objects.select_related('topic', 'uploaded_by')
     serializer_class = MaterialSerializer
     permission_classes = [IsAdminOrTeacherOrReadOnly]
 

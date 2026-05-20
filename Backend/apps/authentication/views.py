@@ -31,24 +31,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         print(f"  • Username: {username}")
         print(f"  • Password Length: {len(password) if password else 0}")
         print(f"  • Institute Name: {institute_name}")
-        
-        # Test manual authenticate
-        user = authenticate(username=username, password=password)
-        if user:
-            print(f"  • Manual Authenticate: SUCCESS (User role: {user.role}, Active: {user.is_active})")
-        else:
-            print("  • Manual Authenticate: FAILED")
-            try:
-                db_user = User.objects.get(username=username)
-                print(f"  • User exists in DB: YES (Role: {db_user.role}, Is Active: {db_user.is_active})")
-                print(f"  • DB Hashed Password: {db_user.password}")
-            except User.DoesNotExist:
-                print("  • User exists in DB: NO")
         print("="*60 + "\n")
         
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
-            user = User.objects.get(username=request.data['username'])
+            user = User.objects.select_related('institute').get(username=request.data['username'])
             
             # Verify institute if provided (with mapping support for full names vs abbreviations)
             if institute_name and user.institute:
@@ -106,8 +93,9 @@ class PasswordResetRequestView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
         email = serializer.validated_data['email']
-        user = User.objects.get(email=email)
+        user = User.objects.get(username=username, email=email)
         
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))

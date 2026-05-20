@@ -10,7 +10,9 @@ import {
   uploadMaterial, 
   deleteMaterial, 
   createAssignment, 
-  getAssignmentsByTopic 
+  getAssignmentsByTopic,
+  updateAssignment,
+  deleteAssignment
 } from '../services/api'
 import { 
   FileText, 
@@ -43,6 +45,16 @@ export function TopicDetail() {
   const [assignmentData, setAssignmentData] = useState({ title: '', description: '', deadline: '' })
   const [isEditingContent, setIsEditingContent] = useState(false)
   const [editedContent, setEditedContent] = useState('')
+
+  const [editingAssignment, setEditingAssignment] = useState(null)
+  const [editAssignmentData, setEditAssignmentData] = useState({ title: '', description: '', deadline: '' })
+
+  const toDatetimeLocal = (dateStr) => {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    const tzOffset = d.getTimezoneOffset() * 60000 // offset in milliseconds
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16)
+  }
 
   const { user } = useSelector((state) => state.auth)
   const canManage = user?.role === 'admin' || user?.role === 'teacher'
@@ -126,13 +138,40 @@ export function TopicDetail() {
       await createAssignment({
         ...assignmentData,
         topic: id,
-        course: topic.module_detail?.course || 1
+        course: topic.course_id || topic.module_detail?.course || 1
       })
       fetchTopicData()
       setShowAssignmentForm(false)
       setAssignmentData({ title: '', description: '', deadline: '' })
     } catch (err) {
       alert('Failed to create assignment')
+    }
+  }
+
+  const handleAssignmentUpdate = async (e) => {
+    e.preventDefault()
+    try {
+      await updateAssignment(editingAssignment.id, {
+        ...editAssignmentData,
+        topic: id,
+        course: topic.course_id || topic.module_detail?.course || 1
+      })
+      fetchTopicData()
+      setEditingAssignment(null)
+      setEditAssignmentData({ title: '', description: '', deadline: '' })
+    } catch (err) {
+      alert('Failed to update assignment')
+    }
+  }
+
+  const handleDeleteAssignment = async (aId) => {
+    if (window.confirm('Delete this assignment?')) {
+      try {
+        await deleteAssignment(aId)
+        fetchTopicData()
+      } catch (err) {
+        alert('Failed to delete assignment')
+      }
     }
   }
 
@@ -259,7 +298,7 @@ export function TopicDetail() {
                     onClick={() => setShowAssignmentForm(!showAssignmentForm)}
                     className={`flex items-center justify-center gap-2 py-3 rounded-2xl transition-all font-bold text-xs border-2 ${showAssignmentForm ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-100 hover:border-purple-200'}`}
                   >
-                    <Plus size={16} /> TASK
+                    <Plus size={16} /> ASSIGNMENT
                   </button>
                 </div>
               </>
@@ -408,14 +447,65 @@ export function TopicDetail() {
           </section>
         </div>
 
-        {/* Sidebar: Tasks/Assignments */}
+        {/* Sidebar: Assignments */}
         <div className="space-y-6">
+          {/* Assignment Creation Form */}
+          {showAssignmentForm && (
+            <div className="p-6 bg-white rounded-[2rem] border-2 border-purple-100 shadow-xl shadow-purple-50 animate-in slide-in-from-top-4 duration-300">
+              <h3 className="text-lg font-black text-gray-800 mb-6 flex items-center gap-2">
+                <Plus className="text-purple-600" /> CREATE NEW ASSIGNMENT
+              </h3>
+              <form onSubmit={handleAssignmentCreate} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assignment Title</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                    value={assignmentData.title}
+                    onChange={e => setAssignmentData({...assignmentData, title: e.target.value})}
+                    placeholder="e.g. Topic Assignment 1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                  <textarea 
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                    value={assignmentData.description}
+                    onChange={e => setAssignmentData({...assignmentData, description: e.target.value})}
+                    placeholder="Describe the assignment task..."
+                    rows="3"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Deadline</label>
+                  <input 
+                    type="datetime-local" 
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                    value={assignmentData.deadline}
+                    onChange={e => setAssignmentData({...assignmentData, deadline: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 pt-4 border-t border-gray-50">
+                  <button type="submit" className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-100">
+                    CREATE
+                  </button>
+                  <button type="button" onClick={() => setShowAssignmentForm(false)} className="px-6 py-3 text-gray-400 font-bold text-xs uppercase">
+                    CANCEL
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
           <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
                 <ClipboardList size={24} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Active Tasks</h2>
+              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Assignments</h2>
             </div>
             
             <div className="space-y-4">
@@ -423,12 +513,85 @@ export function TopicDetail() {
                 <div className="text-center py-10 text-gray-300 italic text-xs">No assignments linked.</div>
               ) : (
                 assignments.map(item => (
-                  <div key={item.id} className="p-5 rounded-2xl bg-gray-50 border border-gray-50 hover:border-purple-100 transition-all">
-                    <h4 className="font-bold text-gray-800 text-sm">{item.title}</h4>
-                    <div className="mt-3 flex items-center gap-2 text-red-500 font-bold text-[10px] uppercase">
-                       <Clock size={12} /> DUE: {new Date(item.deadline).toLocaleDateString()}
+                  editingAssignment?.id === item.id ? (
+                    <form key={item.id} onSubmit={handleAssignmentUpdate} className="p-5 rounded-2xl bg-white border-2 border-purple-200 shadow-md space-y-3">
+                      <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Title</label>
+                        <input 
+                          type="text" 
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-purple-500"
+                          value={editAssignmentData.title}
+                          onChange={e => setEditAssignmentData({...editAssignmentData, title: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                        <textarea 
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-purple-500"
+                          value={editAssignmentData.description}
+                          onChange={e => setEditAssignmentData({...editAssignmentData, description: e.target.value})}
+                          rows="2"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Deadline</label>
+                        <input 
+                          type="datetime-local" 
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-purple-500"
+                          value={editAssignmentData.deadline}
+                          onChange={e => setEditAssignmentData({...editAssignmentData, deadline: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button type="submit" className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider">
+                          SAVE
+                        </button>
+                        <button type="button" onClick={() => setEditingAssignment(null)} className="px-4 py-2 text-gray-400 font-bold text-[10px] uppercase">
+                          CANCEL
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div key={item.id} className="group p-5 rounded-2xl bg-gray-50 border border-gray-50 hover:border-purple-100 hover:bg-white hover:shadow-xl hover:shadow-purple-50/50 transition-all duration-300">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-bold text-gray-800 text-sm group-hover:text-purple-600 transition-colors">{item.title}</h4>
+                        {canManage && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => {
+                                setEditingAssignment(item)
+                                setEditAssignmentData({
+                                  title: item.title,
+                                  description: item.description || '',
+                                  deadline: toDatetimeLocal(item.deadline)
+                                })
+                              }} 
+                              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                              title="Edit Assignment"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAssignment(item.id)} 
+                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                              title="Delete Assignment"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-gray-500 text-xs mt-2 leading-relaxed">{item.description}</p>
+                      <div className="mt-4 flex items-center gap-2 text-red-500 font-bold text-[10px] uppercase tracking-wider">
+                         <Clock size={12} /> DUE: {new Date(item.deadline).toLocaleDateString()} at {new Date(item.deadline).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </div>
                     </div>
-                  </div>
+                  )
                 ))
               )}
             </div>

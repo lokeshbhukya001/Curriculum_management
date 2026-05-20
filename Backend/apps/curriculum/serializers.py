@@ -13,30 +13,27 @@ class MaterialSerializer(serializers.ModelSerializer):
         read_only_fields = ('uploaded_by',)
 
 class TopicSerializer(serializers.ModelSerializer):
+    # objectives and materials are small enough to keep if needed, but we can remove them if not used.
+    # We will keep them for now since a Topic is the leaf node.
     objectives = LearningObjectiveSerializer(many=True, read_only=True)
     materials = MaterialSerializer(many=True, read_only=True)
+    course_id = serializers.ReadOnlyField(source='module.course.id')
     
     class Meta:
         model = Topic
         fields = '__all__'
 
 class ModuleSerializer(serializers.ModelSerializer):
-    topics = TopicSerializer(many=True, read_only=True)
-    
     class Meta:
         model = Module
         fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
-    modules = ModuleSerializer(many=True, read_only=True)
-    
     class Meta:
         model = Course
         fields = '__all__'
 
 class ProgramSerializer(serializers.ModelSerializer):
-    courses = CourseSerializer(many=True, read_only=True)
-    
     class Meta:
         model = Program
         fields = '__all__'

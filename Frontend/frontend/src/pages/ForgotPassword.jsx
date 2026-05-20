@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { forgotPassword } from '../services/api'
 
 export function ForgotPassword() {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,10 +16,10 @@ export function ForgotPassword() {
     setError('')
     setSuccessMessage('')
     try {
-      await forgotPassword(email)
+      await forgotPassword({ username, email })
       setSuccessMessage('Password reset link has been sent to your email. Please check your console if in development.')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to send reset link')
+      setError(err.response?.data?.non_field_errors?.[0] || err.response?.data?.detail || 'Failed to send reset link')
     } finally {
       setLoading(false)
     }
@@ -44,6 +45,17 @@ export function ForgotPassword() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Email Address</label>
             <input

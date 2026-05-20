@@ -52,12 +52,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
     email = serializers.EmailField()
 
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("User with this email does not exist.")
-        return value
+    def validate(self, attrs):
+        username = attrs.get('username')
+        email = attrs.get('email')
+        if not User.objects.filter(username=username, email=email).exists():
+            raise serializers.ValidationError("User with this username and email combination does not exist.")
+        return attrs
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

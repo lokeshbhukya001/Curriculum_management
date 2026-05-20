@@ -65,7 +65,7 @@ api.interceptors.response.use(
 export const login = (credentials) => api.post('/auth/login/', credentials)
 export const register = (userData) => api.post('/auth/register/', userData)
 export const logoutUser = () => api.post('/auth/logout/', { refresh: localStorage.getItem('refresh_token') })
-export const forgotPassword = (email) => api.post('/auth/password-reset/', { email })
+export const forgotPassword = (data) => api.post('/auth/password-reset/', data)
 export const resetPassword = (data) => api.post('/auth/password-reset-confirm/', data)
 
 // ============ Curriculum APIs ============
@@ -102,6 +102,8 @@ export const deleteMaterial = (id) => api.delete(`/curriculum/materials/${id}/`)
 export const getAssignments = () => api.get('/assignments/assignments/')
 export const getAssignmentsByTopic = (topicId) => api.get(`/assignments/assignments/?topic=${topicId}`)
 export const createAssignment = (data) => api.post('/assignments/assignments/', data)
+export const updateAssignment = (id, data) => api.put(`/assignments/assignments/${id}/`, data)
+export const deleteAssignment = (id) => api.delete(`/assignments/assignments/${id}/`)
 export const submitAssignment = (data) => api.post('/assignments/submissions/', data)
 
 // ============ Schedules APIs ============

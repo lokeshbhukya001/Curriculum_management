@@ -5,7 +5,7 @@ from student_data.permissions import IsAdminOrTeacherOrReadOnly
 
 
 class AssignmentViewSet(viewsets.ModelViewSet):
-    queryset = Assignment.objects.all()
+    queryset = Assignment.objects.select_related('course', 'topic')
     serializer_class = AssignmentSerializer
     permission_classes = [IsAdminOrTeacherOrReadOnly]
 
@@ -13,6 +13,10 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
         
+        topic_id = self.request.query_params.get('topic')
+        if topic_id:
+            queryset = queryset.filter(topic_id=topic_id)
+            
         if hasattr(user, 'role') and user.role:
             if user.role == 'student':
                 return queryset.filter(course__enrollments__student=user)
@@ -22,7 +26,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         return queryset
 
 class SubmissionViewSet(viewsets.ModelViewSet):
-    queryset = Submission.objects.all()
+    queryset = Submission.objects.select_related('assignment', 'student')
     serializer_class = SubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
